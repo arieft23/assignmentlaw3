@@ -11,6 +11,8 @@ const app = express()
 app.use(fileupload())
 let channel = null
 
+app.use("/data",express.static('data'))
+
 const handleUpload = (filename, totalSize, callback) => {
     setTimeout(() => {
         var archive = archiver('zip', {
@@ -24,7 +26,7 @@ const handleUpload = (filename, totalSize, callback) => {
         let percent = 10
         archive.on("data", (chunk) => {
             if (archive.pointer() / totalSize * 100 >= percent) {
-                callback("Progress : %s", percent)
+                callback("Progress : " + percent)
                 percent += 10
             }
         })
@@ -32,7 +34,11 @@ const handleUpload = (filename, totalSize, callback) => {
         archive.on("end", () => {
             fs.unlink(location + filename, err => {
                 if (err) console.log(err)
-                else return callback("Data has been compressed")
+                
+                else {
+                    const urlFile = "localhost:3001/data/" + filename + ".zip"
+                    return callback("Data has been compressed, url: " + urlFile)
+                }
             })
         })
 
@@ -92,17 +98,19 @@ amqplib.connect({
     hostname: "localhost",
     port: "5672",
     username: "1506689061",
-    password: "arief",
+    password: "375592",
     vhost: "1506689061"
 }, (err, conn) => {
     if(err){
-        return "ws rusak"
-    }
-    conn.createChannel((err, ch)=>{
-        if(err) return "ws rusak"
-        channel = ch
-        app.listen(3001, () => {
-            console.log("Server runnning on port 3000")
+        return console.log("ws rusak")
+    } else{
+        conn.createChannel((err, ch)=>{
+            if(err) return console.log("ws rusak")
+            channel = ch
+            app.listen(3001, () => {
+                console.log("Server runnning on port 3000")
+            })
         })
-    })
+    }
+    
 })
