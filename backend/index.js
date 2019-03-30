@@ -83,7 +83,7 @@ app.post("/upload", (req, res) => {
 
 const handlePublish = (msg, routeKey) =>{
     const ex = "1506689061"
-    channel.assertExchange(ex, "direct", {durable: true})
+    channel.assertExchange(ex, "direct", {durable: false})
     channel.publish(ex, routeKey, Buffer.from(msg))
 }
 
