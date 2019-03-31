@@ -1,3 +1,4 @@
+// libary
 const express = require('express')
 const amqplib = require('amqplib/callback_api')
 const fileupload = require('express-fileupload')
@@ -6,12 +7,33 @@ var archiver = require('archiver');
 
 const location = __dirname + '/data/'
 
-
 const app = express()
 app.use(fileupload())
 let channel = null
 
 app.use("/data",express.static('data'))
+
+app.post("/upload", (req, res) => {
+    const routeKey = req.headers['x-routing-key']
+    const filename = req.files.file.name
+    const totalSize = req.files.file.size
+    req.files.file.mv(location + filename, err => {
+        if (err) {
+            return res.status(500).send("ada error")
+        }
+        handleUpload(filename, totalSize, (response) => {
+            handlePublish(response, routeKey)
+        })
+        
+    })
+    res.json({ status: "ok" })
+})
+
+const handlePublish = (msg, routeKey) =>{
+    const ex = "1506689061"
+    channel.assertExchange(ex, "direct", {durable: false})
+    channel.publish(ex, routeKey, Buffer.from(msg))
+}
 
 const handleUpload = (filename, totalSize, callback) => {
     setTimeout(() => {
@@ -20,9 +42,6 @@ const handleUpload = (filename, totalSize, callback) => {
         });
         var output = fs.createWriteStream(location + filename + ".zip");
         var input = fs.createReadStream(location + filename)
-        // output.on('close', ()=>{
-        //     callback(archive.pointer())
-        // })
         let percent = 10
         archive.on("data", (chunk) => {
             if (archive.pointer() / totalSize * 100 >= percent) {
@@ -49,53 +68,9 @@ const handleUpload = (filename, totalSize, callback) => {
 }
 
 
-
-// amqp.connect({
-//     protocol: "amqp",
-//     hostname: "152.118.148.103",
-//     port: 5672,
-//     username: "0806444524",
-//     password:"0806444524",
-//     vhost: "/0806444524",
-// }, (err, conn) => {
-//     conn.createChannel(function(err, ch) {
-//         var ex = 'exchange_ping';
-//         var msg = 'Hello World! ini Arief';
-
-//         ch.assertExchange(ex, 'fanout', {durable: false});
-//         while(true){
-//             ch.publish(ex, '', new Buffer(msg));
-//             console.log(" [x] Sent %s", msg);
-//         }
-
-//       });
-//     //   setTimeout(function() { conn.close(); process.exit(0) }, 500);
-// })
-
-app.post("/upload", (req, res) => {
-    const file = req.files.file
-    const filename = file.name
-    const totalSize = file.size
-    file.mv(location + file.name, err => {
-        if (err) {
-            return res.status(500).send("ada error")
-        }
-        handleUpload(filename, totalSize, (response) => {
-            handlePublish(response, "test")
-        })
-        res.json({ status: "ok" })
-    })
-})
-
-const handlePublish = (msg, routeKey) =>{
-    const ex = "1506689061"
-    channel.assertExchange(ex, "direct", {durable: false})
-    channel.publish(ex, routeKey, Buffer.from(msg))
-}
-
 amqplib.connect({
     protocol: "amqp",
-    hostname: "localhost",
+    hostname: "152.118.148.103",
     port: "5672",
     username: "1506689061",
     password: "375592",

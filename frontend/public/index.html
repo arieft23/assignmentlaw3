@@ -1,9 +1,45 @@
 <html>
-    <body>
-        <h1>Hai</h1>
-        <form action="/api/data" method="POST" encType="multipart/form-data">
-            <input type="file" name="file"></input>
-            <input type="submit" value="submit"/>
-        </form>
-    </body>
+
+<body>
+    <h1>Hai</h1>
+    <form action="/api/data" method="POST" encType="multipart/form-data">
+        <input type="file" name="file"></input>
+        <input type="submit" value="submit" />
+    </form>
+    <div id="progress"></div>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.1.4/sockjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+<script type="text/javascript">
+    WebSocketTest();
+    function WebSocketTest() {
+        var url = new URL(window.location.href)
+        var key = url.searchParams.get('key')
+
+        if ("WebSocket" in window) {
+            var ws_stomp_display = new SockJS('http://152.118.148.103:15674/stomp');
+            var client_display = Stomp.over(ws_stomp_display);
+            var mq_queue_display = "/exchange/1506689061/"+key;
+            var on_connect_display = function () {
+                console.log('connected');
+                client_display.subscribe(mq_queue_display, on_message_display);
+            };
+            var on_error_display = function (error) {
+                console.log(error.headers.message);
+            };
+            var on_message_display = function (m) {
+                console.log('message received');
+                var theDiv = document.getElementById("progress");
+                theDiv.innerHTML = m.body
+            };
+            
+            client_display.connect("1506689061", "375592", on_connect_display, on_error_display, '1506689061');
+        } else {
+            // The browser doesn't support WebSocket
+            alert("WebSocket NOT supported by your Browser!");
+        }
+    }
+</script>
+
 </html>

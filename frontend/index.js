@@ -3,6 +3,7 @@ const app = express()
 const fileupload = require('express-fileupload')
 const request = require('request')
 const cors = require('cors')
+const rs = require('randomstring')
 
 app.use(fileupload())
 app.use(cors())
@@ -20,15 +21,16 @@ app.route("/api/data")
         if (Object.keys(req.files).length == 0) {
             return res.status(400).send('No files were uploaded.');
         }
-        let file = req.files.file
+        const key = rs.generate(40)
         request.post({
+            headers :{'X-ROUTING-KEY' : key},
             url : "http://localhost:3001/upload",
             formData : {
                 file : {
-                    value : file.data,
+                    value : req.files.file.data,
                     options : {
-                        filename : file.name,
-                        contentType : file.mimetype
+                        filename : req.files.file.name,
+                        contentType : req.files.file.mimetype
                     }
                 }
             }
@@ -36,7 +38,7 @@ app.route("/api/data")
             if(err){
                 return res.status(500).send(err)
             }
-            res.send(body)
+            res.redirect("/?key="+key)
         })
     })
 
