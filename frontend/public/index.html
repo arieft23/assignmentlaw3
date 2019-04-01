@@ -6,7 +6,8 @@
         <input type="file" name="file"></input>
         <input type="submit" value="submit" />
     </form>
-    <div id="progress"></div>
+    <div id="status"></div>
+    <a id="downloadlink" download></a>
 </body>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.1.4/sockjs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
@@ -26,12 +27,22 @@
                 client_display.subscribe(mq_queue_display, on_message_display);
             };
             var on_error_display = function (error) {
-                console.log(error.headers.message);
+                console.log(error.headers);
             };
             var on_message_display = function (m) {
                 console.log('message received');
-                var theDiv = document.getElementById("progress");
-                theDiv.innerHTML = m.body
+                var theDiv = document.getElementById("status");
+                var body = JSON.parse(m.body)
+                if(body.status == "progress"){
+                    theDiv.innerHTML = "On Progress : " + body.deskripsi
+                } else {
+                    var downloadDiv = document.getElementById("downloadlink");
+                    theDiv.innerHTML = "Data has been compressed"
+                    downloadDiv.href = body.deskripsi
+                    downloadDiv.innerHTML = "Download"
+                    downloadDiv.click()
+                }
+                
             };
             
             client_display.connect("1506689061", "375592", on_connect_display, on_error_display, '1506689061');

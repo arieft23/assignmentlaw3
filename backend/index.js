@@ -32,7 +32,7 @@ app.post("/upload", (req, res) => {
 const handlePublish = (msg, routeKey) =>{
     const ex = "1506689061"
     channel.assertExchange(ex, "direct", {durable: false})
-    channel.publish(ex, routeKey, Buffer.from(msg))
+    channel.publish(ex, routeKey, Buffer.from(JSON.stringify(msg)))
 }
 
 const handleUpload = (filename, totalSize, callback) => {
@@ -45,7 +45,9 @@ const handleUpload = (filename, totalSize, callback) => {
         let percent = 10
         archive.on("data", (chunk) => {
             if (archive.pointer() / totalSize * 100 >= percent) {
-                callback("Progress : " + percent)
+                callback({
+                    status: "progress",
+                    deskripsi : percent})
                 percent += 10
             }
         })
@@ -55,8 +57,10 @@ const handleUpload = (filename, totalSize, callback) => {
                 if (err) console.log(err)
                 
                 else {
-                    const urlFile = "localhost:3001/data/" + filename + ".zip"
-                    return callback("Data has been compressed, url: " + urlFile)
+                    const urlFile = "http://localhost:3001/data/" + filename + ".zip"
+                    return callback({
+                        status : "completed",
+                        deskripsi : urlFile})
                 }
             })
         })
@@ -64,7 +68,7 @@ const handleUpload = (filename, totalSize, callback) => {
         archive.pipe(output)
         archive.append(input, { name: filename })
         archive.finalize()
-    }, 0)
+    }, 2000)
 }
 
 

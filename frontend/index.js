@@ -35,8 +35,9 @@ app.route("/api/data")
                 }
             }
         }, (err, response, body) => {
-            if(err){
-                return res.status(500).send(err)
+            if(err || JSON.parse(body).status != "ok"){
+                console.log(body)
+                return res.status(200).send("Tidak berhasil upload")
             }
             res.redirect("/?key="+key)
         })
