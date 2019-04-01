@@ -19,7 +19,7 @@ app.post("/upload", (req, res) => {
     const totalSize = req.files.file.size
     req.files.file.mv(location + filename, err => {
         if (err) {
-            return res.status(500).send("ada error")
+            return res.status(200).send("ada error")
         }
         handleUpload(filename, totalSize, (response) => {
             handlePublish(response, routeKey)

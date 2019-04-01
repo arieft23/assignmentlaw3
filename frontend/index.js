@@ -2,21 +2,17 @@ const express = require('express')
 const app = express()
 const fileupload = require('express-fileupload')
 const request = require('request')
-const cors = require('cors')
 const rs = require('randomstring')
 
 app.use(fileupload())
-app.use(cors())
+app.engine('ejs', require('ejs').renderFile)
+app.set('view engine', 'ejs')
 
-app.use(function(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    next();
-  });
+app.get('/', (req, res) =>{
+    res.render('index', {key : null})
+})
 
-app.use(express.static('public'))
-
-app.route("/api/data")
+app.route("/upload")
     .post((req, res)=>{
         if (Object.keys(req.files).length == 0) {
             return res.status(400).send('No files were uploaded.');
@@ -39,7 +35,7 @@ app.route("/api/data")
                 console.log(body)
                 return res.status(200).send("Tidak berhasil upload")
             }
-            res.redirect("/?key="+key)
+            res.render('index', {key:key})
         })
     })
 
