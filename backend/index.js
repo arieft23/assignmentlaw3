@@ -60,6 +60,7 @@ const handleUpload = (filename, totalSize, callback) => {
                     const urlFile = "http://localhost:3001/data/" + filename + ".zip"
                     return callback({
                         status : "completed",
+                        filename: filename,
                         deskripsi : urlFile})
                 }
             })

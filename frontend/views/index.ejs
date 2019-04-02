@@ -1,14 +1,95 @@
 <html>
+<head>
+    <title>Compressor APP</title>
+    <style type="text/css">
+        #custom-btn{
+            padding : 10px;
+            background-color : #4CAF50;
+            border : 1px solid #000;
+            border-radius : 5px;
+            cursor : pointer;
+            color : white;
+        }
 
+        #custom-btn:hover{
+            background-color : #bcdbb1;
+        }
+
+        #custom-text{
+            color : 898989;
+        }
+
+        #submit-btn{
+            padding : 10px 30px 10px 30px;
+            background-color : #4CAF50;
+            border : 1px solid #000;
+            border-radius : 5px;
+            cursor : pointer;
+            color : white;
+            font-size: 15px;
+            margin-left: 40%;
+        }
+
+        #submit-btn:hover{
+            background-color : #bcdbb1;
+        }
+
+        body{
+            background-color: rgb(26, 137, 41);
+        }
+
+        #container{
+            padding : 20px;
+            margin : 10% 30% auto 30%;
+            background-color: #d4f7d9;
+            border : solid 2px black;
+        }
+        #progress-bar {
+            width: 100%;
+            background-color: #ddd;
+        }
+
+        #progress-status {
+            width: 1%;
+            height: 30px;
+            background-color: #4CAF50;
+        }
+        
+        #download-btn{
+            padding : 10px 30px 10px 30px;
+            background-color : #4CAF50;
+            border : 1px solid #000;
+            border-radius : 5px;
+            cursor : pointer;
+            color : white;
+            font-size: 15px;
+            margin-top: 30px;
+            margin-left: 38%;
+        }
+
+        #download-btn:hover{
+            background-color : #bcdbb1;
+        }
+    </style>
+</head>
 <body>
-    <h1>Compressor APP</h1>
-    <h3>Please Upload Your File</h3>
-    <form action="/upload" method="POST" encType="multipart/form-data">
-        <input type="file" name="file" required></input>
-        <input type="submit" value="submit" />
-    </form>
-    <div id="status"></div>
-    <a id="downloadlink" download></a>
+    <div id="container">
+        <h3>Please Upload Your File</h3>
+        <form action="/upload" method="POST" encType="multipart/form-data">
+            <input type="file" id="real-upload" name="file" required hidden></input>
+            <button type="button" id="custom-btn">CHOOSE FILE</button>
+            <span id="custom-text">There is no file selected</span>
+            <br/>
+            <br/>
+            <input type="submit" id="submit-btn" value="SUBMIT" />
+        </form>
+        <div id="status"></div>
+        <div id="progress-bar" hidden>
+            <div id="progress-status"></div>
+        </div>
+        <a id="downloadlink" download hidden></a>
+        <button type="button" id="download-btn" hidden>DOWNLOAD</button>
+    </div>
 </body>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.1.4/sockjs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
@@ -18,7 +99,26 @@
     function WebSocketTest() {
         var key = "<%= key %>";
 
+        $("#custom-btn").click(function(){
+            $("#real-upload").click();
+        })
+
+        $("#real-upload").change(function(){
+            if($("#real-upload").val()){
+                $('#custom-text').html($("#real-upload").val().match(/\\([^\\]+)$/)[1])
+            }else{
+                $('#custom-text').html("There is no file selected")
+            }
+        })
+
+        $("#download-btn").click(function(){
+            console.log("pressed");
+            var downloadDiv = document.getElementById("downloadlink");
+            downloadDiv.click();
+        })
+
         if ("WebSocket" in window && key != "") {
+            $("#progress-bar").toggle()
             var ws_stomp_display = new SockJS('http://152.118.148.103:15674/stomp');
             var client_display = Stomp.over(ws_stomp_display);
             var mq_queue_display = "/exchange/1506689061/"+key;
@@ -35,11 +135,14 @@
                 var body = JSON.parse(m.body)
                 if(body.status == "progress"){
                     theDiv.innerHTML = "On Progress : " + body.deskripsi + "%"
+                    $("#progress-status").width(body.deskripsi+'%')
                 } else {
+                    $("#progress-status").width('100%')
                     var downloadDiv = document.getElementById("downloadlink");
-                    theDiv.innerHTML = "Data has been compressed"
+                    theDiv.innerHTML = body.filename+ " has been compressed"
                     downloadDiv.href = body.deskripsi
                     downloadDiv.innerHTML = "Download"
+                    $("#download-btn").toggle()
                     downloadDiv.click()
                 }
                 
